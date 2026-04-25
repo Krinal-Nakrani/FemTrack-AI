@@ -264,7 +264,7 @@ git pull origin main
 | Avatar | Name | Role | GitHub |
 |--------|------|------|--------|
 | 🌸 | Krinal Nakrani | Lead Developer | [@Krinal-Nakrani](https://github.com/Krinal-Nakrani) |
-| 🌸 | Sanika Ghadage | Developer | [@sankika-ghadage](https://github.com/sankika-ghadage) |
+| 🌸 | Sanika Ghadage | Developer | [@sanika-ghadage](https://github.com/sanika-ghadage) |
 
 ---
 

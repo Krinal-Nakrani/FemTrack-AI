@@ -10,24 +10,24 @@
     --color-cream: 248 240 255;
     --color-coral: 255 107 157;
 
-    --background: 270 40% 98%;
-    --foreground: 270 50% 10%;
+    --background: 300 20% 99%; /* Soft Warm Blush */
+    --foreground: 270 40% 15%; /* Deep Plum charcoal */
     --card: 0 0% 100%;
-    --card-foreground: 270 50% 10%;
+    --card-foreground: 270 40% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 270 50% 10%;
-    --primary: 330 49% 54%;
+    --popover-foreground: 270 40% 15%;
+    --primary: 330 49% 54%;    /* Classic Rose */
     --primary-foreground: 0 0% 100%;
-    --secondary: 263 40% 72%;
-    --secondary-foreground: 270 50% 10%;
-    --muted: 270 20% 94%;
+    --secondary: 260 30% 90%;   /* Soft Lavender Mist */
+    --secondary-foreground: 270 40% 25%;
+    --muted: 270 20% 96%;
     --muted-foreground: 270 10% 45%;
-    --accent: 340 100% 71%;
+    --accent: 340 100% 75%;    /* Soft Coral */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 270 20% 88%;
-    --input: 270 20% 88%;
+    --border: 330 20% 94%;     /* Very faint rose border */
+    --input: 330 20% 94%;
     --ring: 330 49% 54%;
     --radius: 16px;
   }
@@ -92,14 +92,14 @@
 
   .glass-card-light {
     @apply relative overflow-hidden;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(179, 157, 219, 0.2);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(201, 75, 138, 0.1);
     border-radius: 20px;
     box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.06),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      0 10px 25px -5px rgba(201, 75, 138, 0.08),
+      0 8px 10px -6px rgba(201, 75, 138, 0.05);
   }
 
   .dark .glass-card-auto {

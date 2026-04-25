@@ -3,9 +3,17 @@
 # ============================================
 
 # ----- Environment & Secrets -----
+# Block ALL .env files everywhere (frontend + backend)
 .env
 .env.local
 .env.*.local
+
+# BUT always track .env.example files (templates for contributors)
+!.env.example
+!frontend/.env.example
+!backend/.env.example
+
+# Other secrets
 *.pem
 *.key
 firebase-service-account.json

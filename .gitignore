@@ -1,0 +1,54 @@
+# ============================================
+#  FemTrack AI — .gitignore
+# ============================================
+
+# ----- Environment & Secrets -----
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+firebase-service-account.json
+
+# ----- Frontend (Node / Vite) -----
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.tsbuildinfo
+frontend/*.tsbuildinfo
+
+# ----- Backend (Python) -----
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.venv/
+backend/venv/
+backend/env/
+backend/.env
+backend/saved_models/
+backend/data/synthetic_pcod_data.csv
+
+# ----- IDE & OS -----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- Logs & Debug -----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ----- Build Artifacts -----
+*.tgz
+*.tar.gz
+coverage/
+.nyc_output/
+
+# ----- PWA Generated -----
+frontend/dev-dist/

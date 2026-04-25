@@ -11,6 +11,7 @@ export function WellnessRing({ logged, total }: WellnessRingProps) {
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const isComplete = percentage === 100;
 
   return (
     <GlassCard glow="lavender" padding="md" className="flex flex-col items-center">
@@ -31,8 +32,24 @@ export function WellnessRing({ logged, total }: WellnessRingProps) {
             cy="65"
             r={radius}
             fill="none"
-            stroke="rgba(179, 157, 219, 0.15)"
+            stroke="rgba(179, 157, 219, 0.1)"
             strokeWidth="10"
+          />
+          {/* Glow ring */}
+          <motion.circle
+            cx="65"
+            cy="65"
+            r={radius}
+            fill="none"
+            stroke="url(#wellnessGradient)"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 1.5, ease: 'easeOut', delay: 0.5 }}
+            filter="url(#wellnessBlur)"
+            opacity={0.3}
           />
           {/* Progress circle */}
           <motion.circle
@@ -53,8 +70,21 @@ export function WellnessRing({ logged, total }: WellnessRingProps) {
               <stop offset="0%" stopColor="#B39DDB" />
               <stop offset="100%" stopColor="#C94B8A" />
             </linearGradient>
+            <filter id="wellnessBlur">
+              <feGaussianBlur stdDeviation="3" />
+            </filter>
           </defs>
         </svg>
+
+        {/* Completion ripple */}
+        {isComplete && (
+          <motion.div
+            className="absolute inset-0 rounded-full border-2 border-green-400"
+            initial={{ scale: 0.8, opacity: 0.8 }}
+            animate={{ scale: 1.3, opacity: 0 }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+        )}
 
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -70,13 +100,19 @@ export function WellnessRing({ logged, total }: WellnessRingProps) {
         </div>
       </div>
 
-      <p className="text-sm text-lavender/80 font-body mt-3 text-center">
-        {percentage === 100
+      <motion.p
+        className="text-sm font-body mt-3 text-center"
+        style={{ color: isComplete ? '#4ADE80' : percentage >= 50 ? '#B39DDB' : 'rgba(179,157,219,0.6)' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        {isComplete
           ? '✨ All logged!'
           : percentage >= 50
-          ? 'Keep it up!'
-          : 'Start logging today'}
-      </p>
+          ? '💪 Keep it up!'
+          : '🌱 Start logging today'}
+      </motion.p>
     </GlassCard>
   );
 }

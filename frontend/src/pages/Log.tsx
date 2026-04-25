@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
@@ -12,7 +12,7 @@ import { LifestyleStep } from '@/components/log/LifestyleStep';
 import { NotesStep } from '@/components/log/NotesStep';
 import { Confetti } from '@/components/log/Confetti';
 
-const STEPS = [
+const ALL_STEPS = [
   { key: 'status', label: 'Period Status' },
   { key: 'flow', label: 'Flow' },
   { key: 'symptoms', label: 'Symptoms' },
@@ -43,8 +43,19 @@ export function Log() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
+  // Dynamically compute visible steps based on period status
+  // If "none" or "ended" → skip the flow step
+  const activeSteps = useMemo(() => {
+    const hasPeriod = formData.periodStatus === 'started' || formData.periodStatus === 'ongoing';
+    if (hasPeriod) return ALL_STEPS;
+    // Skip flow step when no period
+    return ALL_STEPS.filter((s) => s.key !== 'flow');
+  }, [formData.periodStatus]);
+
+  const currentStepKey = activeSteps[step]?.key || 'status';
+
   const nextStep = () => {
-    if (step < STEPS.length - 1) setStep(step + 1);
+    if (step < activeSteps.length - 1) setStep(step + 1);
   };
 
   const prevStep = () => {
@@ -54,9 +65,16 @@ export function Log() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // If no period, ensure flowLevel is 0
+      const dataToSave = {
+        ...formData,
+        flowLevel: (formData.periodStatus === 'started' || formData.periodStatus === 'ongoing')
+          ? formData.flowLevel
+          : 0,
+      };
       await saveLog({
         date: getDateString(),
-        ...formData,
+        ...dataToSave,
       });
       setShowConfetti(true);
       setTimeout(() => {
@@ -95,6 +113,65 @@ export function Log() {
     prevStep();
   };
 
+  const renderStep = () => {
+    switch (currentStepKey) {
+      case 'status':
+        return (
+          <CycleStatusStep
+            value={formData.periodStatus}
+            onChange={(v) => {
+              updateField('periodStatus', v);
+              // Reset flow if switching to no period
+              if (v === 'none' || v === 'ended') {
+                updateField('flowLevel', 0);
+              }
+            }}
+          />
+        );
+      case 'flow':
+        return (
+          <FlowIntensityStep
+            value={formData.flowLevel}
+            onChange={(v) => updateField('flowLevel', v)}
+          />
+        );
+      case 'symptoms':
+        return (
+          <SymptomsStep
+            value={formData.symptoms}
+            onChange={(v) => updateField('symptoms', v)}
+          />
+        );
+      case 'mood':
+        return (
+          <MoodStep
+            value={formData.mood}
+            onChange={(v) => updateField('mood', v)}
+          />
+        );
+      case 'lifestyle':
+        return (
+          <LifestyleStep
+            sleep={formData.sleepHours}
+            stress={formData.stressLevel}
+            water={formData.waterIntake}
+            onSleepChange={(v) => updateField('sleepHours', v)}
+            onStressChange={(v) => updateField('stressLevel', v)}
+            onWaterChange={(v) => updateField('waterIntake', v)}
+          />
+        );
+      case 'notes':
+        return (
+          <NotesStep
+            value={formData.notes}
+            onChange={(v) => updateField('notes', v)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto relative">
       {showConfetti && <Confetti />}
@@ -114,9 +191,9 @@ export function Log() {
         <div className="w-10" />
       </div>
 
-      {/* Progress indicator */}
+      {/* Progress indicator — dynamic based on active steps */}
       <div className="flex items-center gap-2 mb-8">
-        {STEPS.map((s, i) => (
+        {activeSteps.map((s, i) => (
           <div key={s.key} className="flex-1 flex flex-col items-center gap-1">
             <div
               className={`h-1.5 w-full rounded-full transition-all duration-300 ${
@@ -140,7 +217,7 @@ export function Log() {
       <div className="relative overflow-hidden min-h-[400px]">
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
-            key={step}
+            key={currentStepKey}
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -148,46 +225,7 @@ export function Log() {
             exit="exit"
             transition={{ type: 'tween', duration: 0.3 }}
           >
-            {step === 0 && (
-              <CycleStatusStep
-                value={formData.periodStatus}
-                onChange={(v) => updateField('periodStatus', v)}
-              />
-            )}
-            {step === 1 && (
-              <FlowIntensityStep
-                value={formData.flowLevel}
-                onChange={(v) => updateField('flowLevel', v)}
-              />
-            )}
-            {step === 2 && (
-              <SymptomsStep
-                value={formData.symptoms}
-                onChange={(v) => updateField('symptoms', v)}
-              />
-            )}
-            {step === 3 && (
-              <MoodStep
-                value={formData.mood}
-                onChange={(v) => updateField('mood', v)}
-              />
-            )}
-            {step === 4 && (
-              <LifestyleStep
-                sleep={formData.sleepHours}
-                stress={formData.stressLevel}
-                water={formData.waterIntake}
-                onSleepChange={(v) => updateField('sleepHours', v)}
-                onStressChange={(v) => updateField('stressLevel', v)}
-                onWaterChange={(v) => updateField('waterIntake', v)}
-              />
-            )}
-            {step === 5 && (
-              <NotesStep
-                value={formData.notes}
-                onChange={(v) => updateField('notes', v)}
-              />
-            )}
+            {renderStep()}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -205,7 +243,7 @@ export function Log() {
           Back
         </motion.button>
 
-        {step < STEPS.length - 1 ? (
+        {step < activeSteps.length - 1 ? (
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={goNext}

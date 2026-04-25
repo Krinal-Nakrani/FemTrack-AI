@@ -14,6 +14,10 @@ const Calendar = lazy(() => import('@/pages/Calendar'));
 const Insights = lazy(() => import('@/pages/Insights'));
 const PCOD = lazy(() => import('@/pages/PCOD'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const Exercise = lazy(() => import('@/pages/Exercise'));
+const History = lazy(() => import('@/pages/History'));
+const PartnerPortal = lazy(() => import('@/pages/PartnerPortal'));
+const DoctorPortal = lazy(() => import('@/pages/DoctorPortal'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,12 +45,20 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
         <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+
+        {/* Public portals (no auth required) */}
+        <Route path="/partner/:token" element={<PartnerPortal />} />
+        <Route path="/doctor" element={<DoctorPortal />} />
+
+        {/* Protected app routes */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/log" element={<Log />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/pcod" element={<PCOD />} />
+          <Route path="/exercise" element={<Exercise />} />
+          <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

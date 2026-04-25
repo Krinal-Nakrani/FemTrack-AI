@@ -263,8 +263,8 @@ git pull origin main
 <!-- Add contributors here -->
 | Avatar | Name | Role | GitHub |
 |--------|------|------|--------|
-| 🌸 | Your Name | Lead Developer | [@YOUR_USERNAME](https://github.com/YOUR_USERNAME) |
-| 🌸 | Contributor Name | Developer | [@CONTRIBUTOR_USERNAME](https://github.com/CONTRIBUTOR_USERNAME) |
+| 🌸 | Krinal Nakrani | Lead Developer | [@Krinal-Nakrani](https://github.com/Krinal-Nakrani) |
+| 🌸 | Sanika Ghadage | Developer | [@sankika-ghadage](https://github.com/sankika-ghadage) |
 
 ---
 

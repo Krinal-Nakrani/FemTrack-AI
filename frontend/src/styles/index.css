@@ -249,6 +249,25 @@
     background: linear-gradient(135deg, #B39DDB, #9575CD);
   }
 
+  .gradient-teal {
+    background: linear-gradient(135deg, #0D9488, #14B8A6);
+  }
+
+  .btn-teal {
+    @apply relative overflow-hidden px-6 py-3 rounded-2xl font-body font-semibold text-white transition-all duration-300;
+    background: linear-gradient(135deg, #0D9488, #14B8A6);
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4);
+  }
+
+  .btn-teal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(13, 148, 136, 0.55);
+  }
+
+  .btn-teal:active {
+    transform: translateY(0);
+  }
+
   /* ───────── Buttons ───────── */
   .btn-primary {
     @apply relative overflow-hidden px-6 py-3 rounded-2xl font-body font-semibold text-white transition-all duration-300;

@@ -107,3 +107,12 @@ export function getPhaseInsight(phase: CyclePhase): string {
       return 'Time to slow down and nurture yourself. You might crave comfort foods — opt for complex carbs and magnesium-rich snacks. Journaling can help process emotions.';
   }
 }
+
+export function generateInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing 0/O/1/I
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}

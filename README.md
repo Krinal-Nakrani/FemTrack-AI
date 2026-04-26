@@ -93,15 +93,25 @@ API docs at http://localhost:8000/docs
 | Backend | FastAPI + scikit-learn |
 | Data Fetching | TanStack Query v5 |
 | Routing | React Router v6 |
-| Icons | Lucide React |
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Framer Motion.
+- **Backend**: Python (FastAPI), Uvicorn.
+- **Database**: 
+    - **Local**: Dexie.js (IndexedDB) for primary health data.
+    - **Cloud**: Firebase Firestore for invitation management and role-based access.
+- **Auth**: Firebase Authentication.
+- **Email**: Resend API for secure automated invitations.
+- **Machine Learning**: Scikit-learn (Random Forest) for PCOD risk prediction.
 
 ---
 
 ## 📱 Features
 
-- **Smart Cycle Tracking** — AI predictions with confidence intervals
-- **PCOD Risk Assessment** — ML-powered risk scoring (0–100)
-- **Beautiful Calendar** — Color-coded cycle days with bottom sheet details
+- 📅 **Smart Cycle Tracking** — Log flow, symptoms, mood, and lifestyle with AI predictions.
+- 🤝 **Partner Sharing** — Invite your partner with a secure code to view your dashboard.
+- ☁️ **Cloud Verification** — Secure, centralized invitation codes via Firebase Firestore.
+- 📱 **Unified Partner Dashboard** — A dedicated, single-page view for invited partners.
+- 🩺 **Doctor Portal** — Share data with gynecologists via a secure, verifiable link.
+- 🤖 **PCOD Risk Prediction** — ML-powered hormonal health assessment.
 - **Deep Insights** — 5 chart types: cycle length, symptoms, mood, flow, regularity
 - **Multi-step Logging** — 6-step form with animated transitions and confetti
 - **Offline First** — Full IndexedDB with auto-sync to Firestore

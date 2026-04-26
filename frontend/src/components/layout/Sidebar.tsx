@@ -13,24 +13,56 @@ import {
   Clock,
   Stethoscope,
   Heart,
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { cn } from '@/lib/utils';
+import { db } from '@/config/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/log', label: 'Log', icon: PenSquare },
-  { path: '/calendar', label: 'Calendar', icon: Calendar },
-  { path: '/exercise', label: 'Exercise', icon: Dumbbell },
-  { path: '/insights', label: 'Insights', icon: BarChart3 },
-  { path: '/pcod', label: 'PCOD Risk', icon: Activity },
-  { path: '/history', label: 'History', icon: Clock },
-  { path: '/profile', label: 'Profile', icon: User },
+  { path: '/dashboard', label: 'Dashboard', icon: Home, roles: ['user'] },
+  { path: '/partner-dashboard', label: 'Partner View', icon: Heart, roles: ['partner'] },
+  { path: '/log', label: 'Log', icon: PenSquare, roles: ['user'] },
+  { path: '/calendar', label: 'Calendar', icon: Calendar, roles: ['user'] },
+  { path: '/community', label: 'Community', icon: MessageSquare, roles: ['user'] },
+  { path: '/doctors', label: 'Doctors', icon: Stethoscope, roles: ['user'] },
+  { path: '/exercise', label: 'Exercise', icon: Dumbbell, roles: ['user'] },
+  { path: '/insights', label: 'Insights', icon: BarChart3, roles: ['user'] },
+  { path: '/pcod', label: 'PCOD Risk', icon: Activity, roles: ['user'] },
+  { path: '/history', label: 'History', icon: Clock, roles: ['user'] },
+  { path: '/profile', label: 'Profile', icon: User, roles: ['user'] },
 ];
+
+import femtrackDB, { UserProfile } from '@/lib/db';
+import { useEffect, useState } from 'react';
 
 export function Sidebar() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      femtrackDB.profiles.where('odataId').equals(user.uid).first().then(setProfile);
+      
+      const q = query(
+        collection(db, 'users', user.uid, 'notifications'),
+        where('isRead', '==', false)
+      );
+      const unsub = onSnapshot(q, (snap) => setUnreadCount(snap.size));
+      return () => unsub();
+    }
+  }, [user]);
+
+  const filteredItems = navItems.filter(item => {
+    const userRole = profile?.role || 'user'; // Fallback to 'user' for existing accounts
+    return item.roles.includes(userRole);
+  });
 
   return (
     <motion.aside
@@ -40,18 +72,30 @@ export function Sidebar() {
       className="hidden lg:flex flex-col w-[280px] h-screen fixed left-0 top-0 z-30 glass-card rounded-none border-r border-lavender/10 overflow-y-auto"
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 pt-8 pb-6">
-        <motion.div
-          className="w-10 h-10 rounded-xl gradient-rose flex items-center justify-center shadow-glow-rose"
-          whileHover={{ rotate: 15, scale: 1.1 }}
-          transition={{ type: 'spring', stiffness: 300 }}
-        >
-          <Flower2 size={22} className="text-white" />
-        </motion.div>
-        <div>
-          <h1 className="text-lg font-display font-bold text-white">FemTrack</h1>
-          <span className="text-xs text-lavender/70 font-body">AI-Powered Insights</span>
+      <div className="flex items-center justify-between px-6 pt-8 pb-6">
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="w-10 h-10 rounded-xl gradient-rose flex items-center justify-center shadow-glow-rose"
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            transition={{ type: 'spring', stiffness: 300 }}
+          >
+            <Flower2 size={22} className="text-white" />
+          </motion.div>
+          <div>
+            <h1 className="text-lg font-display font-bold text-white">FemTrack</h1>
+            <span className="text-xs text-lavender/70 font-body">AI-Powered Insights</span>
+          </div>
         </div>
+
+        <button 
+          onClick={() => navigate('/notifications')}
+          className="relative p-2 rounded-lg bg-white/5 text-lavender/50 hover:text-rose-400 transition-colors"
+        >
+          <Bell size={18} />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose shadow-glow-rose" />
+          )}
+        </button>
       </div>
 
       {/* User info */}
@@ -77,7 +121,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-4 space-y-1">
-        {navItems.map((item) => (
+        {filteredItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

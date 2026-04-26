@@ -1,7 +1,11 @@
 """FemTrack AI — FastAPI Backend for PCOD Prediction & Cycle Analysis."""
-import numpy as np
+import os
+import resend
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from schemas.requests import (
     PCODPredictionRequest, PCODPredictionResponse,
@@ -97,6 +101,50 @@ async def predict_next_cycle(request: CyclePredictionRequest):
 async def detect_anomalies(cycle_lengths: list[int]):
     return anomaly_detector.detect_anomalies(cycle_lengths)
 
+
+@app.post("/api/send-invite")
+async def send_invite(email: str, code: str, sender_name: str):
+    api_key = os.getenv("RESEND_API_KEY")
+    if not api_key:
+        return {"status": "error", "message": "Resend API key not configured."}
+    
+    resend.api_key = api_key
+    
+    # Generate the signup link with the invite code
+    invite_link = f"http://localhost:5173/auth?invite={code}&email={email}"
+    
+    try:
+        r = resend.Emails.send({
+            "from": "FemTrack AI <onboarding@resend.dev>",
+            "to": email,
+            "subject": f"{sender_name} invited you to FemTrack AI",
+            "html": f"""
+                <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #fcfaff; border: 1px solid #e9d5ff; border-radius: 24px;">
+                    <h2 style="color: #1a0a2e; text-align: center; font-size: 24px; margin-bottom: 8px;">FemTrack AI 🌸</h2>
+                    <p style="color: #6b7280; text-align: center; margin-bottom: 32px;">Smart Period Tracking & PCOD Risk Prediction</p>
+                    
+                    <p style="color: #1a0a2e; font-size: 16px;">Hi there!</p>
+                    <p style="color: #1a0a2e; font-size: 16px; line-height: 1.6;">
+                        <strong>{sender_name}</strong> has invited you to view their wellness dashboard. This allows you to stay informed about their cycle health and support them effectively.
+                    </p>
+                    
+                    <div style="background-color: #ffffff; padding: 32px; border-radius: 20px; text-align: center; margin: 32px 0; border: 1px solid #f3e8ff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                        <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #C94B8A;">Your Invite Code</p>
+                        <h1 style="margin: 0 0 24px 0; letter-spacing: 4px; color: #1a0a2e; font-size: 32px; font-family: monospace;">{code}</h1>
+                        
+                        <a href="{invite_link}" style="display: inline-block; background: linear-gradient(135deg, #C94B8A, #FF6B9D); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 14px; font-weight: 600; font-size: 16px; transition: transform 0.2s;">Accept Invitation</a>
+                    </div>
+                    
+                    <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 32px;">
+                        If the button doesn't work, copy and paste this link into your browser:<br>
+                        <span style="color: #C94B8A; word-break: break-all;">{invite_link}</span>
+                    </p>
+                </div>
+            """
+        })
+        return {"status": "success", "id": r["id"]}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

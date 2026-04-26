@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 dob: null,
                 avgCycleLength: 28,
                 avgPeriodLength: 5,
+                role: 'user', // Default role
                 onboarded: false,
                 synced: false,
               });

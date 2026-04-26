@@ -1,24 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Flower2, Mail, Lock, User, Eye, EyeOff, Chrome, ArrowLeft, Stethoscope } from 'lucide-react';
+import { Flower2, Mail, Lock, User, Eye, EyeOff, Chrome, ArrowLeft, Stethoscope, Heart } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import femtrackDB from '@/lib/db';
+import { db } from '@/config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 export function Auth() {
   const [searchParams] = useSearchParams();
   const isDoctor = searchParams.get('role') === 'doctor';
+  const inviteCodeFromUrl = searchParams.get('invite');
+  const emailFromUrl = searchParams.get('email');
 
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [isLogin, setIsLogin] = useState(!inviteCodeFromUrl);
+  const [signupRole, setSignupRole] = useState<'user' | 'partner'>(inviteCodeFromUrl ? 'partner' : 'user');
+  const [email, setEmail] = useState(emailFromUrl || '');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [enteredInviteCode, setEnteredInviteCode] = useState(inviteCodeFromUrl || '');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
-
-  const redirectPath = isDoctor ? '/doctor' : '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,17 +33,77 @@ export function Auth() {
     try {
       if (isLogin) {
         await signIn(email, password);
+        
+        // After login, check DB for role
+        const profile = await femtrackDB.profiles.where('email').equals(email).first();
+        if (profile?.role === 'partner') {
+          navigate('/partner-dashboard', { replace: true });
+          setLoading(false);
+          return;
+        }
+
+        // Check if it's a doctor
+        const doctorSnap = await getDoc(doc(db, 'doctors', (await import('@/config/firebase')).auth.currentUser?.uid || ''));
+        if (doctorSnap.exists()) {
+          navigate('/doctor-dashboard', { replace: true });
+          setLoading(false);
+          return;
+        }
       } else {
         if (!name.trim()) {
           setError('Please enter your name');
           setLoading(false);
           return;
         }
+
+        // If partner signup, verify the code
+        let linkedId = '';
+        if (signupRole === 'partner') {
+          if (!enteredInviteCode) {
+            setError('Please enter the invite code from your email');
+            setLoading(false);
+            return;
+          }
+
+          const inviteDoc = await getDoc(doc(db, 'invitations', enteredInviteCode));
+          if (inviteDoc.exists()) {
+            linkedId = inviteDoc.data().senderUid;
+          } else {
+            setError('Invalid or expired invite code. Please check your email.');
+            setLoading(false);
+            return;
+          }
+        }
+
         await signUp(email, password, name);
+
+        // Update the newly created profile
+        const myProfile = await femtrackDB.profiles.where('email').equals(email).first();
+        if (myProfile) {
+          await femtrackDB.profiles.update(myProfile.id!, {
+            role: signupRole,
+            linkedUserId: linkedId,
+            onboarded: signupRole === 'partner',
+            synced: false
+          });
+        }
+
+        if (signupRole === 'partner') {
+          navigate('/partner-dashboard', { replace: true });
+          setLoading(false);
+          return;
+        }
       }
-      navigate(redirectPath);
+      
+      navigate(isDoctor ? '/doctor' : '/dashboard', { replace: true });
     } catch (err: any) {
-      setError(err.message?.replace('Firebase: ', '') || 'Authentication failed');
+      let friendlyMessage = err.message?.replace('Firebase: ', '') || 'Authentication failed';
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
+        friendlyMessage = isLogin 
+          ? "No account found with this email. Did you mean to Sign Up instead?" 
+          : "Invalid credentials. Please check your email and password.";
+      }
+      setError(friendlyMessage);
     }
     setLoading(false);
   };
@@ -48,7 +113,13 @@ export function Auth() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      navigate(redirectPath);
+      // Check role after Google Sign-in
+      const myProfile = await femtrackDB.profiles.where('email').equals(email).first();
+      if (myProfile?.role === 'partner') {
+        navigate('/partner-dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err: any) {
       setError(err.message?.replace('Firebase: ', '') || 'Google sign in failed');
     }
@@ -160,12 +231,12 @@ export function Auth() {
                   fill={['#C94B8A', '#B39DDB', '#FF6B9D', '#9575CD', '#EC4899', '#FBBF24'][i]}
                   animate={{
                     cx: [
-                      120 + 80 * Math.cos((i * Math.PI) / 3),
-                      120 + 80 * Math.cos((i * Math.PI) / 3 + Math.PI * 2),
+                      (120 + 80 * Math.cos((i * Math.PI) / 3)).toString(),
+                      (120 + 80 * Math.cos((i * Math.PI) / 3 + Math.PI * 2)).toString(),
                     ],
                     cy: [
-                      120 + 80 * Math.sin((i * Math.PI) / 3),
-                      120 + 80 * Math.sin((i * Math.PI) / 3 + Math.PI * 2),
+                      (120 + 80 * Math.sin((i * Math.PI) / 3)).toString(),
+                      (120 + 80 * Math.sin((i * Math.PI) / 3 + Math.PI * 2)).toString(),
                     ],
                   }}
                   transition={{ duration: 12 + i, repeat: Infinity, ease: 'linear' }}
@@ -263,6 +334,23 @@ export function Auth() {
             </p>
           </div>
 
+          {/* Invitation Badge */}
+          {inviteCodeFromUrl && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 rounded-2xl bg-rose/10 border border-rose/20 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-xl gradient-rose flex items-center justify-center text-white shrink-0">
+                <Heart size={20} fill="currentColor" />
+              </div>
+              <div>
+                <p className="text-sm font-display font-bold text-white">Invitation Detected</p>
+                <p className="text-[10px] text-lavender/60 font-body">Create your account to view your partner's health dashboard.</p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Card */}
           <div className="glass-card p-8">
             {/* Google Sign In */}
@@ -294,24 +382,70 @@ export function Auth() {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
+                    className="space-y-4"
                   >
-                    <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
-                      Full Name
-                    </label>
-                    <div className="relative group">
-                      <User
-                        size={16}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40 group-focus-within:text-rose-400 transition-colors"
-                      />
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Your name"
-                        className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-plum-700/50 border border-lavender/10 text-white placeholder-lavender/30 font-body text-sm focus:outline-none focus:border-rose/50 focus:ring-2 focus:ring-rose/20 transition-all duration-300"
-                        id="auth-name"
-                      />
+                    {/* Role Selector */}
+                    <div className="flex p-1 bg-plum-700/50 rounded-xl border border-lavender/10">
+                      <button
+                        type="button"
+                        onClick={() => setSignupRole('user')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${signupRole === 'user' ? 'bg-rose text-white shadow-glow-rose' : 'text-lavender/50'}`}
+                      >
+                        <User size={14} /> I'm Tracking
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSignupRole('partner')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${signupRole === 'partner' ? 'bg-rose text-white shadow-glow-rose' : 'text-lavender/50'}`}
+                      >
+                        <Heart size={14} /> I'm a Partner
+                      </button>
                     </div>
+
+                    <div>
+                      <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
+                        Full Name
+                      </label>
+                      <div className="relative group">
+                        <User
+                          size={16}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40 group-focus-within:text-rose-400 transition-colors"
+                        />
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Your name"
+                          className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-plum-700/50 border border-lavender/10 text-white placeholder-lavender/30 font-body text-sm focus:outline-none focus:border-rose/50 focus:ring-2 focus:ring-rose/20 transition-all duration-300"
+                          id="auth-name"
+                        />
+                      </div>
+                    </div>
+
+                    {signupRole === 'partner' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
+                          Invite Code (from email)
+                        </label>
+                        <div className="relative group">
+                          <Lock
+                            size={16}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40 group-focus-within:text-rose-400 transition-colors"
+                          />
+                          <input
+                            type="text"
+                            value={enteredInviteCode}
+                            onChange={(e) => setEnteredInviteCode(e.target.value.toUpperCase())}
+                            placeholder="e.g. RR2MJ3Z8"
+                            className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-plum-700/50 border border-rose/30 text-rose-300 placeholder-rose/20 font-mono text-sm tracking-widest focus:outline-none focus:border-rose/50 focus:ring-2 focus:ring-rose/20 transition-all duration-300"
+                            id="auth-invite-code"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -424,6 +558,17 @@ export function Auth() {
             By continuing, you agree to FemTrack AI's Terms of Service and Privacy Policy.
             This is not a medical device.
           </p>
+
+          {/* Doctor Registration Entry */}
+          <div className="mt-8 pt-6 border-t border-lavender/5">
+            <p className="text-[10px] text-center text-lavender/30 uppercase tracking-widest font-bold mb-4">Medical Professionals</p>
+            <button
+              onClick={() => navigate('/auth/doctor-register')}
+              className="w-full py-3 rounded-xl border border-teal/20 text-teal-400 font-body text-sm font-semibold flex items-center justify-center gap-2 hover:bg-teal/5 transition-all"
+            >
+              <Stethoscope size={18} /> Create a Doctor Profile
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>

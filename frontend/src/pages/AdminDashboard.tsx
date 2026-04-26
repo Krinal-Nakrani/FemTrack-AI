@@ -1,22 +1,23 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  Stethoscope, 
-  Heart, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Edit2, 
-  Trash2, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Users,
+  Stethoscope,
+  Heart,
+  Search,
+  Filter,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  CheckCircle,
+  XCircle,
   Activity,
   BarChart3,
   Calendar,
   ShieldAlert,
   Download,
-  Plus
+  Plus,
+  Clock
 } from 'lucide-react';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { db } from '@/config/firebase';
@@ -53,7 +54,7 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'doctors' | 'partners'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  
+
   // Data States
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [doctors, setDoctors] = useState<DoctorRecord[]>([]);
@@ -71,7 +72,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     setLoading(true);
-    
+
     // Subscribe to Profiles
     const unsubProfiles = onSnapshot(collection(db, 'profiles'), (snap) => {
       const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as UserRecord));
@@ -142,8 +143,8 @@ export function AdminDashboard() {
             <ShieldAlert className="text-rose-400" /> Administrative Console
           </h1>
           <div className="flex items-center gap-2 mt-1">
-             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-             <p className="text-lavender/50 font-body text-sm">System Live: Central Command Active</p>
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <p className="text-lavender/50 font-body text-sm">System Live: Central Command Active</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -196,9 +197,8 @@ export function AdminDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all relative ${
-                activeTab === tab.id ? 'text-white' : 'text-lavender/40 hover:text-lavender/60 hover:bg-white/5'
-              }`}
+              className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all relative ${activeTab === tab.id ? 'text-white' : 'text-lavender/40 hover:text-lavender/60 hover:bg-white/5'
+                }`}
             >
               <tab.icon size={16} />
               {tab.label}
@@ -317,22 +317,22 @@ export function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-xs text-lavender/60">
-                          {activeTab === 'doctors' 
-                            ? (item as DoctorRecord).specialization || 'N/A' 
+                          {activeTab === 'doctors'
+                            ? (item as DoctorRecord).specialization || 'N/A'
                             : activeTab === 'partners' ? `Invited by ${(item as InviteRecord).senderName}` : (item as UserRecord).role === 'partner' ? 'Partner Portal' : 'Standard User'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {activeTab !== 'partners' && (
-                            <button 
+                            <button
                               onClick={() => openEdit(item)}
                               className="p-2 rounded-lg bg-white/5 text-lavender/60 hover:text-white hover:bg-white/10 transition-all"
                             >
                               <Edit2 size={14} />
                             </button>
                           )}
-                          <button 
+                          <button
                             onClick={() => handleDelete(item.id, activeTab === 'doctors' ? 'doctors' : activeTab === 'partners' ? 'invitations' : 'profiles')}
                             className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
                           >
@@ -372,7 +372,7 @@ export function AdminDashboard() {
               <h2 className="text-xl font-display font-bold text-white mb-6 flex items-center gap-3">
                 <Edit2 size={20} className="text-rose-400" /> Administrative Overwrite
               </h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] text-lavender/40 font-bold uppercase tracking-widest mb-1.5 ml-1">Account Name</label>
@@ -394,9 +394,9 @@ export function AdminDashboard() {
                       className="w-full px-4 py-3 rounded-xl bg-plum-700/50 border border-white/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-all"
                     />
                     <div className="mt-4 flex items-center gap-3">
-                      <input 
-                        type="checkbox" 
-                        checked={editForm.verified || false} 
+                      <input
+                        type="checkbox"
+                        checked={editForm.verified || false}
                         onChange={(e) => setEditForm({ ...editForm, verified: e.target.checked })}
                         className="w-4 h-4 rounded border-white/10 bg-plum-700/50 text-rose-400 focus:ring-rose/20"
                       />

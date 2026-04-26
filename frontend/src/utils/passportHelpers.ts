@@ -48,7 +48,8 @@ export function aggregatePassportData(
   memberSince: string,
   logs: DailyLog[],
   cycles: CycleRecord[],
-  predictions: PcodPrediction[]
+  predictions: PcodPrediction[],
+  currentPhaseInput?: string
 ): PassportData {
   // Cycle stats
   const validCycles = cycles.filter((c) => c.length && c.length > 0);
@@ -80,10 +81,25 @@ export function aggregatePassportData(
     pcodTrend = diff < -5 ? 'improving' : diff > 5 ? 'worsening' : 'stable';
   }
 
+  // Also check localStorage PCOD scan results
+  const localScans = JSON.parse(localStorage.getItem('femtrack_pcod_scans') || '[]');
+  let pcodScore = latestPcod?.riskScore || 25;
+  let pcodLevel: 'low' | 'moderate' | 'high' = latestPcod?.riskLevel || 'low';
+  if (localScans.length > 0) {
+    const latest = localScans[localScans.length - 1];
+    pcodScore = latest.pcod_risk_score || pcodScore;
+    pcodLevel = latest.pcod_risk_level || pcodLevel;
+  }
+
   // Period dates for heatmap
   const periodDates = logs
     .filter((l) => l.periodStatus === 'started' || l.periodStatus === 'ongoing')
     .map((l) => l.date);
+
+  const riskHist = sortedPreds.slice(-6).map((p) => p.riskScore);
+  if (localScans.length > 0 && riskHist.length === 0) {
+    localScans.slice(-6).forEach((s: any) => riskHist.push(s.pcod_risk_score));
+  }
 
   return {
     name,
@@ -95,15 +111,15 @@ export function aggregatePassportData(
     avgCycleLength: avgLen,
     cycleVariance: variance,
     cyclesTracked: validCycles.length || cycles.length,
-    pcodRiskScore: latestPcod?.riskScore || 25,
-    pcodRiskLevel: latestPcod?.riskLevel || 'low',
+    pcodRiskScore: pcodScore,
+    pcodRiskLevel: pcodLevel,
     pcodTrend,
-    topSymptoms: topSymptoms.length > 0 ? topSymptoms : ['cramps', 'fatigue', 'bloating'],
-    currentPhase: 'follicular',
+    topSymptoms: topSymptoms.length > 0 ? topSymptoms : [],
+    currentPhase: currentPhaseInput || 'follicular',
     lastUpdated: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    cycleLengths: lengths.length > 0 ? lengths.slice(-6) : [28, 29, 27, 30, 28, 29],
+    cycleLengths: lengths.length > 0 ? lengths.slice(-6) : [],
     periodDates,
-    riskHistory: sortedPreds.slice(-6).map((p) => p.riskScore),
+    riskHistory: riskHist,
   };
 }
 

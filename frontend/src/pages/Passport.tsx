@@ -111,7 +111,8 @@ export function Passport() {
         : 'Jan 2024',
       cycleData?.logs || [],
       cycleData?.cycles || [],
-      predictions
+      predictions,
+      cycleData?.phase || 'follicular'
     );
   }, [passportId, cycleLoading, cycleData, predictions, user, userAge, bloodGroup]);
 

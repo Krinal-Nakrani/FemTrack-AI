@@ -10,7 +10,7 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: Home, roles: ['user'] },
   { path: '/partner-dashboard', label: 'Home', icon: Heart, roles: ['partner'] },
   { path: '/community', label: 'Community', icon: MessageSquare, roles: ['user'] },
-  { path: '/pcod', label: 'PCOD', icon: Activity, roles: ['user'] },
+  { path: '/pcod-scan', label: 'PCOD', icon: Activity, roles: ['user'] },
   { path: '/history', label: 'History', icon: Clock, roles: ['user'] },
   { path: '/profile', label: 'Profile', icon: User, roles: ['user', 'partner'] },
 ];

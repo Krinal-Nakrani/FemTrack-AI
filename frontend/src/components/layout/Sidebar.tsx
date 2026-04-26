@@ -14,7 +14,9 @@ import {
   Stethoscope,
   Heart,
   MessageSquare,
-  Bell
+  Bell,
+  Shield,
+  Package
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
@@ -33,6 +35,8 @@ const navItems = [
   { path: '/exercise', label: 'Exercise', icon: Dumbbell, roles: ['user'] },
   { path: '/insights', label: 'Insights', icon: BarChart3, roles: ['user'] },
   { path: '/pcod', label: 'PCOD Risk', icon: Activity, roles: ['user'] },
+  { path: '/passport', label: 'Cycle Passport', icon: Shield, roles: ['user'] },
+  { path: '/know-your-options', label: 'Know Options', icon: Package, roles: ['user'] },
   { path: '/history', label: 'History', icon: Clock, roles: ['user'] },
   { path: '/profile', label: 'Profile', icon: User, roles: ['user'] },
 ];

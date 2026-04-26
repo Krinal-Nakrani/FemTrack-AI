@@ -31,6 +31,9 @@ const AskQuestion = lazy(() => import('@/pages/AskQuestion'));
 const BrowseDoctors = lazy(() => import('@/pages/BrowseDoctors'));
 const DoctorPublicProfile = lazy(() => import('@/pages/DoctorPublicProfile'));
 const UserNotifications = lazy(() => import('@/pages/UserNotifications'));
+const Passport = lazy(() => import('@/pages/Passport'));
+const PassportPublic = lazy(() => import('@/pages/PassportPublic'));
+const KnowYourOptions = lazy(() => import('@/pages/KnowYourOptions'));
 
 import { seedDoctors } from '@/lib/seedDoctors';
 import { useUserType } from '@/hooks/useUserType';
@@ -98,6 +101,7 @@ function AppRoutes() {
         {/* Public portals (no auth required) */}
         <Route path="/partner/:token" element={<PartnerPortal />} />
         <Route path="/doctor" element={<DoctorPortal />} />
+        <Route path="/passport/:passportId" element={<PassportPublic />} />
 
         {/* Protected app routes */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -116,6 +120,8 @@ function AppRoutes() {
           <Route path="/doctors" element={<BrowseDoctors />} />
           <Route path="/doctors/:doctorId" element={<DoctorPublicProfile />} />
           <Route path="/notifications" element={<UserNotifications />} />
+          <Route path="/passport" element={<Passport />} />
+          <Route path="/know-your-options" element={<KnowYourOptions />} />
         </Route>
 
         {/* Doctor Dashboard routes */}

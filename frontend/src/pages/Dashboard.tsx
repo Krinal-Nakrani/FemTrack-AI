@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCycle } from '@/hooks/useCycle';
 import { getGreeting } from '@/lib/utils';
@@ -14,7 +14,8 @@ import { MessageSquare, CheckCircle, Users } from 'lucide-react';
 import { GlassCard } from '@/components/shared/GlassCard';
 import { useNavigate } from 'react-router-dom';
 import femtrackDB from '@/lib/db';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { Send, Bot, X, MessageCircle } from 'lucide-react';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -89,7 +90,7 @@ export function Dashboard() {
         {/* Wellness Ring + PCOD Meter */}
         <div className="grid grid-cols-2 gap-4">
           <WellnessRing logged={loggedCount} total={totalCategories} />
-          <PCODMeter score={25} riskLevel="low" />
+          <PCODMeter score={(() => { try { const s = JSON.parse(localStorage.getItem('femtrack_pcod_scans') || '[]'); return s.length > 0 ? s[s.length - 1].pcod_risk_score : 25; } catch { return 25; } })()} riskLevel={(() => { try { const s = JSON.parse(localStorage.getItem('femtrack_pcod_scans') || '[]'); return s.length > 0 ? s[s.length - 1].pcod_risk_level : 'low'; } catch { return 'low' as const; } })()} />
         </div>
 
         {/* Upcoming Events */}
@@ -130,8 +131,113 @@ export function Dashboard() {
           </div>
         </GlassCard>
       </section>
+      <ChatBot />
     </div>
   );
 }
 
 export default Dashboard;
+
+// ─── AI CHATBOT WIDGET ───
+const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+
+function ChatBot() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<{ role: 'user' | 'bot'; text: string }[]>([
+    { role: 'bot', text: 'Hi! 👋 I\'m your FemTrack AI assistant. Ask me anything about periods, PCOD, symptoms, or women\'s health!' },
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const send = async () => {
+    if (!input.trim()) return;
+    const userMsg = input.trim();
+    setInput('');
+    setMessages((prev) => [...prev, { role: 'user', text: userMsg }]);
+    setLoading(true);
+
+    try {
+      if (!GEMINI_KEY) throw new Error('No key');
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `You are a warm, knowledgeable women's health assistant for FemTrack AI app. Answer concisely in 2-3 sentences. Be empathetic and supportive. If asked about serious symptoms, always recommend consulting a doctor.\n\nUser: ${userMsg}` }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 200 },
+          }),
+        }
+      );
+      const json = await res.json();
+      const text = json.candidates?.[0]?.content?.parts?.[0]?.text || 'I\'m here to help! Could you rephrase that?';
+      setMessages((prev) => [...prev, { role: 'bot', text }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: 'bot', text: 'I\'m having trouble connecting right now. Please try again in a moment! 💜' }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <>
+      {/* Floating Button */}
+      <motion.button
+        onClick={() => setOpen(!open)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-rose flex items-center justify-center shadow-xl shadow-rose-500/30"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        {open ? <X size={22} className="text-white" /> : <MessageCircle size={22} className="text-white" />}
+      </motion.button>
+
+      {/* Chat Window */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 glass-card rounded-2xl overflow-hidden flex flex-col" style={{ maxHeight: 450 }}
+          >
+            <div className="px-4 py-3 border-b border-lavender/10 flex items-center gap-2">
+              <Bot size={18} className="text-purple-400" />
+              <span className="text-sm font-display font-bold text-white">FemTrack AI Assistant</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ maxHeight: 320 }}>
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] px-3 py-2 rounded-xl text-xs font-body leading-relaxed ${
+                    m.role === 'user' ? 'bg-purple-600/30 text-white' : 'bg-white/5 text-lavender/80'
+                  }`}>{m.text}</div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-white/5 px-3 py-2 rounded-xl">
+                    <div className="flex gap-1"><div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" /><div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0.1s' }} /><div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0.2s' }} /></div>
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+            <div className="px-3 py-2 border-t border-lavender/10 flex gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && send()}
+                placeholder="Ask anything..."
+                className="flex-1 px-3 py-2 rounded-xl bg-plum-700/50 border border-lavender/10 text-white placeholder-lavender/30 font-body text-xs focus:outline-none focus:border-purple-400/50"
+              />
+              <button onClick={send} disabled={loading || !input.trim()} className="p-2 rounded-xl bg-purple-600/30 text-purple-300 disabled:opacity-30">
+                <Send size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

@@ -21,7 +21,7 @@ export function BottomNav() {
 
   useEffect(() => {
     if (user) {
-      femtrackDB.profiles.where('odataId').equals(user.uid).first().then(setProfile);
+      femtrackDB.profiles.where('odataId').equals(user.uid).first().then(p => setProfile(p || null));
     }
   }, [user]);
 

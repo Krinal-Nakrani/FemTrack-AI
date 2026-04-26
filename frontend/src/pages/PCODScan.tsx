@@ -44,6 +44,8 @@ export function PCODScan() {
   });
   const [result, setResult] = useState<PCODResult | null>(null);
   const [scanMsg, setScanMsg] = useState(0);
+  const [symptomsConfirmed, setSymptomsConfirmed] = useState(false);
+  const [profileConfirmed, setProfileConfirmed] = useState(false);
 
   // Load profile data
   useEffect(() => {
@@ -71,7 +73,8 @@ export function PCODScan() {
     load();
   }, [user, cycleData]);
 
-  const canRun = !!faceImage;
+  const symptomsAnswered = Object.values(symptoms).some((v) => v !== 'no');
+  const canRun = !!faceImage && symptomsConfirmed && profileConfirmed;
 
   const runAnalysis = async () => {
     if (!faceImage) return;
@@ -103,6 +106,8 @@ export function PCODScan() {
     setFaceImage(null);
     setSymptoms(DEFAULT_SYMPTOMS);
     setResult(null);
+    setSymptomsConfirmed(false);
+    setProfileConfirmed(false);
   };
 
   // ─── SCANNING SCREEN ───
@@ -157,9 +162,9 @@ export function PCODScan() {
         {STEPS.map((s, i) => (
           <button key={s.key} onClick={() => setStep(i)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-body font-medium transition-all ${
-              step === i ? 'bg-purple-600/40 text-white shadow-lg' : i < step ? 'bg-green-500/10 text-green-400' : 'text-lavender/40'
+              step === i ? 'bg-purple-600/40 text-white shadow-lg' : (i === 0 && faceImage) || (i === 1 && symptomsConfirmed) || (i === 2 && profileConfirmed) ? 'bg-green-500/10 text-green-400' : 'text-lavender/40'
             }`}>
-            {i < step ? '✓' : <s.icon size={14} />}
+            {(i === 0 && faceImage) || (i === 1 && symptomsConfirmed) || (i === 2 && profileConfirmed) ? '✓' : <s.icon size={14} />}
             {s.label}
           </button>
         ))}
@@ -179,7 +184,7 @@ export function PCODScan() {
             <h2 className="text-lg font-display font-semibold text-white mb-2">Step 2 — Symptom Check</h2>
             <p className="text-xs text-lavender/50 font-body mb-4">Quick self-assessment of PCOD-associated symptoms.</p>
             <StepSymptoms answers={symptoms} onChange={setSymptoms} />
-            <button onClick={() => setStep(2)} className="w-full mt-4 py-3 rounded-xl bg-purple-600/30 text-purple-300 font-body text-sm font-medium flex items-center justify-center gap-2">
+            <button onClick={() => { setSymptomsConfirmed(true); setStep(2); }} className="w-full mt-4 py-3 rounded-xl bg-purple-600/30 text-purple-300 font-body text-sm font-medium flex items-center justify-center gap-2">
               Continue <ChevronRight size={14} />
             </button>
           </motion.div>
@@ -190,11 +195,12 @@ export function PCODScan() {
             <h2 className="text-lg font-display font-semibold text-white mb-2">Step 3 — Health Profile</h2>
             <p className="text-xs text-lavender/50 font-body mb-4">Verify your health data for accurate assessment.</p>
             <StepProfile profile={healthProfile} onChange={setHealthProfile} />
-            <button onClick={runAnalysis} disabled={!canRun}
+            <button onClick={() => { setProfileConfirmed(true); runAnalysis(); }} disabled={!faceImage || !symptomsConfirmed}
               className="w-full mt-6 py-3.5 rounded-xl gradient-rose text-white font-body text-sm font-bold disabled:opacity-30 flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20">
               <Zap size={16} /> Run PCOD Analysis
             </button>
-            {!canRun && <p className="text-amber-400/60 text-xs font-body text-center mt-2">Complete face scan first</p>}
+            {!faceImage && <p className="text-amber-400/60 text-xs font-body text-center mt-2">⚠️ Complete face scan first (Step 1)</p>}
+            {faceImage && !symptomsConfirmed && <p className="text-amber-400/60 text-xs font-body text-center mt-2">⚠️ Complete symptom check first (Step 2)</p>}
           </motion.div>
         )}
       </AnimatePresence>

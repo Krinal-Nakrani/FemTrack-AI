@@ -52,7 +52,7 @@ export function Sidebar() {
 
   useEffect(() => {
     if (user) {
-      femtrackDB.profiles.where('odataId').equals(user.uid).first().then(setProfile);
+      femtrackDB.profiles.where('odataId').equals(user.uid).first().then(p => setProfile(p || null));
       
       const q = query(
         collection(db, 'users', user.uid, 'notifications'),

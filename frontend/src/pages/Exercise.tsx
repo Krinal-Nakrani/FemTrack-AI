@@ -23,7 +23,26 @@ export function Exercise() {
 
   const todaySymptoms = cycleData.todayLog?.symptoms || [];
   const todayMood = cycleData.todayLog?.mood || '';
-  const pcodScore = 25;
+
+  // Get real PCOD score from latest scan
+  const pcodScore = (() => {
+    try {
+      const scans = JSON.parse(localStorage.getItem('femtrack_pcod_scans') || '[]');
+      return scans.length > 0 ? scans[scans.length - 1].pcod_risk_score : 25;
+    } catch { return 25; }
+  })();
+
+  // Auto-generate AI exercises on page load
+  useEffect(() => {
+    const fetchPlan = async () => {
+      setAiLoading(true);
+      const plan = await generateExercisePlan(cycleData.phase, todaySymptoms, pcodScore, todayMood);
+      setAiExercises(plan);
+      setAiLoading(false);
+      setAiGenerated(true);
+    };
+    fetchPlan();
+  }, [cycleData.phase]);
 
   const recommendations = useMemo(() => {
     return getRecommendedExercises(cycleData.phase, todaySymptoms, pcodScore, todayMood, 3);

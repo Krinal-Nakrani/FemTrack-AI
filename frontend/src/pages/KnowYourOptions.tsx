@@ -1,9 +1,85 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Target, ShoppingBag, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Sparkles, ExternalLink, MapPin, Star, Leaf } from 'lucide-react';
+import { BookOpen, Target, ShoppingBag, ChevronDown, ChevronUp, ArrowRight, ArrowLeft, Sparkles, ExternalLink, MapPin, Star, Leaf, Navigation } from 'lucide-react';
 import { PRODUCTS, DID_YOU_KNOW_FACTS, ONLINE_STORES } from '@/data/products';
 import type { Product } from '@/data/products';
 import { generateProductRecommendation } from '@/utils/geminiApi';
+
+function NearbyStoresMap() {
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState('');
+
+  const detectLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setError('Geolocation not supported');
+      return;
+    }
+    setLocating(true);
+    setError('');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setError('Location access denied. Using default.');
+        setCoords({ lat: 19.076, lng: 72.8777 }); // Fallback: Mumbai
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
+
+  useEffect(() => { detectLocation(); }, [detectLocation]);
+
+  const lat = coords?.lat || 19.076;
+  const lng = coords?.lng || 72.8777;
+  const bbox = `${lng - 0.02}%2C${lat - 0.015}%2C${lng + 0.02}%2C${lat + 0.015}`;
+
+  return (
+    <div className="glass-card p-4">
+      {locating && (
+        <div className="flex items-center justify-center gap-2 py-8">
+          <div className="w-5 h-5 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
+          <p className="text-lavender/60 font-body text-sm">Detecting your location...</p>
+        </div>
+      )}
+      {!locating && (
+        <>
+          <div className="rounded-xl overflow-hidden mb-3" style={{ height: 250 }}>
+            <iframe
+              title="Nearby medical stores"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`}
+              style={{ border: 0, borderRadius: 12 }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <a
+              href={`https://www.google.com/maps/search/medical+store+pharmacy/@${lat},${lng},15z`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600/20 text-purple-300 font-body text-sm hover:bg-purple-600/30 transition"
+            >
+              <MapPin size={14} /> Find Pharmacies
+            </a>
+            <button
+              onClick={detectLocation}
+              className="px-3 py-2.5 rounded-xl bg-white/5 text-lavender/50 hover:text-white transition"
+            >
+              <Navigation size={14} />
+            </button>
+          </div>
+          {error && <p className="text-amber-400/50 text-[10px] font-body mt-2 text-center">{error}</p>}
+          {coords && <p className="text-[10px] text-lavender/30 font-body mt-2 text-center">📍 Location detected — showing stores near you</p>}
+        </>
+      )}
+    </div>
+  );
+}
 
 type AgeGroup = 'under-15' | '15-17' | '18-22' | '23+';
 
@@ -487,34 +563,12 @@ export function KnowYourOptions() {
               ))}
             </div>
 
-            {/* Nearby — OpenStreetMap */}
+            {/* Nearby — OpenStreetMap with auto-location */}
             <h3 className="text-sm font-display font-semibold text-white flex items-center gap-2 mt-6">
               <MapPin size={14} className="text-rose-400" />
               Find Nearby Stores
             </h3>
-            <div className="glass-card p-4">
-              <div className="rounded-xl overflow-hidden mb-3" style={{ height: 250 }}>
-                <iframe
-                  title="Nearby pharmacies"
-                  width="100%"
-                  height="100%"
-                  frameBorder="0"
-                  src="https://www.openstreetmap.org/export/embed.html?bbox=72.8%2C18.9%2C73.0%2C19.1&layer=mapnik&marker=19.0%2C72.9"
-                  style={{ border: 0, borderRadius: 12 }}
-                />
-              </div>
-              <a
-                href="https://www.openstreetmap.org/#map=14/19.0/72.9"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-purple-600/20 text-purple-300 font-body text-sm hover:bg-purple-600/30 transition"
-              >
-                <MapPin size={14} /> Open Full Map
-              </a>
-              <p className="text-[10px] text-lavender/30 font-body mt-2 text-center">
-                Search for "medical store" or "pharmacy" near your location on the map
-              </p>
-            </div>
+            <NearbyStoresMap />
           </motion.div>
         )}
       </AnimatePresence>

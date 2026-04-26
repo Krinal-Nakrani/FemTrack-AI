@@ -20,6 +20,9 @@ export async function hashPIN(pin: string): Promise<string> {
 // Aggregate all user data into passport display format
 export interface PassportData {
   name: string;
+  email: string;
+  age: string;
+  bloodGroup: string;
   passportId: string;
   memberSince: string;
   avgCycleLength: number;
@@ -38,6 +41,9 @@ export interface PassportData {
 
 export function aggregatePassportData(
   name: string,
+  email: string,
+  age: string,
+  bloodGroup: string,
   passportId: string,
   memberSince: string,
   logs: DailyLog[],
@@ -81,6 +87,9 @@ export function aggregatePassportData(
 
   return {
     name,
+    email,
+    age,
+    bloodGroup,
     passportId,
     memberSince,
     avgCycleLength: avgLen,

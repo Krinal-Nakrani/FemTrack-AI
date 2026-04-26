@@ -57,6 +57,20 @@ export function PassportCard({ data, showQR = true }: PassportCardProps) {
             <p className="text-white/80 text-xs">{data.memberSince}</p>
           </div>
         </div>
+        <div className="grid grid-cols-3 gap-2 mt-2">
+          <div>
+            <p className="text-white/40 text-[10px] uppercase tracking-wider">Age</p>
+            <p className="text-white/80 text-xs">{data.age || '—'}</p>
+          </div>
+          <div>
+            <p className="text-white/40 text-[10px] uppercase tracking-wider">Blood Group</p>
+            <p className="text-white/80 text-xs">{data.bloodGroup || '—'}</p>
+          </div>
+          <div>
+            <p className="text-white/40 text-[10px] uppercase tracking-wider">Email</p>
+            <p className="text-white/80 text-[9px] truncate">{data.email || '—'}</p>
+          </div>
+        </div>
         <div className="mt-2">
           <p className="text-white/40 text-[10px] uppercase tracking-wider">Passport ID</p>
           <p className="text-rose-300 font-mono text-sm font-bold tracking-widest">{data.passportId}</p>

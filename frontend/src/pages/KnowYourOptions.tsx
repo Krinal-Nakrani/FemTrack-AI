@@ -119,7 +119,7 @@ function ProductCard({ product, ageGroup }: { product: Product; ageGroup: AgeGro
 
   return (
     <motion.div
-      className="min-w-[260px] max-w-[280px] rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer"
+      className="rounded-2xl overflow-hidden cursor-pointer w-full"
       style={{ background: `${product.color}15`, border: `1px solid ${product.color}30` }}
       onClick={() => setExpanded(!expanded)}
       layout
@@ -320,7 +320,7 @@ export function KnowYourOptions() {
             }`}
           >
             <t.icon size={14} />
-            <span className="hidden sm:inline">{t.label}</span>
+            <span>{t.label}</span>
           </button>
         ))}
       </div>
@@ -329,9 +329,11 @@ export function KnowYourOptions() {
         {/* ═══ LEARN TAB ═══ */}
         {tab === 'learn' && (
           <motion.div key="learn" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <div className="flex gap-3 overflow-x-auto pb-4 px-1 snap-x" style={{ scrollbarWidth: 'none' }}>
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} ageGroup={ageGroup} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-1">
+              {filteredProducts.map((product, i) => (
+                <motion.div key={product.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                  <ProductCard product={product} ageGroup={ageGroup} />
+                </motion.div>
               ))}
             </div>
           </motion.div>

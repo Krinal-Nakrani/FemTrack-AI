@@ -47,6 +47,8 @@ export function Passport() {
   const [visitNotes, setVisitNotes] = useState<VisitNote[]>([]);
   const [showAddNote, setShowAddNote] = useState(false);
   const [noteForm, setNoteForm] = useState({ doctor: '', hospital: '', date: '', reason: '' });
+  const [userAge, setUserAge] = useState('');
+  const [bloodGroup, setBloodGroup] = useState('');
 
   const uid = user?.uid || 'anonymous';
 
@@ -80,6 +82,12 @@ export function Passport() {
         // Load visit notes
         const storedNotes = localStorage.getItem(`femtrack_visit_notes_${uid}`);
         if (storedNotes) setVisitNotes(JSON.parse(storedNotes));
+
+        // Load personal info
+        const storedAge = localStorage.getItem(`femtrack_age_${uid}`);
+        if (storedAge) setUserAge(storedAge);
+        const storedBg = localStorage.getItem(`femtrack_blood_${uid}`);
+        if (storedBg) setBloodGroup(storedBg);
       }
 
       // Load predictions
@@ -94,6 +102,9 @@ export function Passport() {
     if (!passportId || cycleLoading) return null;
     return aggregatePassportData(
       user?.displayName || 'User',
+      user?.email || '',
+      userAge,
+      bloodGroup,
       passportId,
       user?.metadata?.creationTime
         ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -102,7 +113,7 @@ export function Passport() {
       cycleData?.cycles || [],
       predictions
     );
-  }, [passportId, cycleLoading, cycleData, predictions, user]);
+  }, [passportId, cycleLoading, cycleData, predictions, user, userAge, bloodGroup]);
 
   const toggleStatus = () => {
     const next = status === 'active' ? 'paused' : 'active';
@@ -225,6 +236,36 @@ export function Passport() {
             <p className="text-center text-[10px] text-lavender/30 font-body mt-3 font-mono">
               Your Passport ID: {passportId} — this never changes
             </p>
+
+            {/* Personal Info */}
+            <div className="mt-6 px-4">
+              <h3 className="text-sm font-display font-semibold text-white mb-3">Personal Information</h3>
+              <div className="glass-card p-4 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-lavender/40 font-body uppercase">Age</label>
+                  <input
+                    type="number"
+                    value={userAge}
+                    onChange={(e) => { setUserAge(e.target.value); localStorage.setItem(`femtrack_age_${uid}`, e.target.value); }}
+                    placeholder="e.g. 22"
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-plum-700/50 border border-lavender/10 text-white placeholder-lavender/30 font-body text-sm focus:outline-none focus:border-purple-400/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-lavender/40 font-body uppercase">Blood Group</label>
+                  <select
+                    value={bloodGroup}
+                    onChange={(e) => { setBloodGroup(e.target.value); localStorage.setItem(`femtrack_blood_${uid}`, e.target.value); }}
+                    className="w-full mt-1 px-3 py-2 rounded-lg bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-purple-400/50"
+                  >
+                    <option value="">Select</option>
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
             {/* PIN warning */}
             {!pin && (

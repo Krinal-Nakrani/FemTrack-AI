@@ -34,7 +34,7 @@ const navItems = [
   { path: '/doctors', label: 'Doctors', icon: Stethoscope, roles: ['user'] },
   { path: '/exercise', label: 'Exercise', icon: Dumbbell, roles: ['user'] },
   { path: '/insights', label: 'Insights', icon: BarChart3, roles: ['user'] },
-  { path: '/pcod', label: 'PCOD Risk', icon: Activity, roles: ['user'] },
+  { path: '/pcod-scan', label: 'PCOD Scan', icon: Activity, roles: ['user'] },
   { path: '/passport', label: 'Cycle Passport', icon: Shield, roles: ['user'] },
   { path: '/know-your-options', label: 'Know Options', icon: Package, roles: ['user'] },
   { path: '/history', label: 'History', icon: Clock, roles: ['user'] },

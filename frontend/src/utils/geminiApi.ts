@@ -124,3 +124,77 @@ Return ONLY valid JSON:
     };
   }
 }
+
+export interface AIExercise {
+  title: string;
+  description: string;
+  duration: string;
+  intensity: 'gentle' | 'moderate' | 'active';
+  youtube_search: string;
+  why: string;
+  emoji: string;
+}
+
+export async function generateExercisePlan(phase: string, symptoms: string[], pcodScore: number, mood: string): Promise<AIExercise[]> {
+  const fallback: AIExercise[] = [
+    { title: 'Gentle Yoga Flow', description: 'Restorative poses for your current phase', duration: '10 min', intensity: 'gentle', youtube_search: 'gentle yoga for period cramps', why: 'Helps ease tension and improve blood flow', emoji: '🧘' },
+    { title: 'Deep Breathing', description: '4-7-8 breathing for calm and relaxation', duration: '5 min', intensity: 'gentle', youtube_search: '4-7-8 breathing technique relaxation', why: 'Reduces cortisol and eases discomfort', emoji: '🌬️' },
+    { title: 'Light Stretching', description: 'Full body stretch targeting tight areas', duration: '8 min', intensity: 'gentle', youtube_search: 'light stretching routine morning', why: 'Improves flexibility and reduces stiffness', emoji: '🤸' },
+  ];
+
+  if (!GEMINI_API_KEY) return fallback;
+
+  const prompt = `You are a certified yoga instructor specializing in women's health and menstrual cycle-aware fitness.
+
+User's current state:
+- Menstrual cycle phase: ${phase}
+- Today's symptoms: ${symptoms.length > 0 ? symptoms.join(', ') : 'none reported'}
+- PCOD risk score: ${pcodScore}/100
+- Current mood: ${mood || 'not specified'}
+
+Generate exactly 4 personalized yoga/exercise recommendations. Each must be a real, specific yoga pose or routine that exists on YouTube.
+
+Return ONLY a JSON array:
+[
+  {
+    "title": "<specific exercise name>",
+    "description": "<1 sentence what it does>",
+    "duration": "<e.g. 8 min>",
+    "intensity": "gentle | moderate | active",
+    "youtube_search": "<exact YouTube search query to find this video>",
+    "why": "<1 sentence why this helps their specific condition>",
+    "emoji": "<relevant emoji>"
+  }
+]
+
+Rules:
+- If menstrual phase: only gentle/restorative. No inversions.
+- If follicular: moderate energy OK.
+- If ovulation: active exercises OK.
+- If luteal: gentle to moderate, focus on mood.
+- If PCOD score > 50: include insulin-sensitizing exercises (brisk walking, strength)
+- If cramps reported: include hip openers, child's pose
+- If fatigue: include energizing but gentle flows
+- Return ONLY valid JSON array.`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.6, maxOutputTokens: 600 },
+        }),
+      }
+    );
+    const json = await response.json();
+    const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const match = text.match(/\[[\s\S]*\]/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error('No JSON array');
+  } catch {
+    return fallback;
+  }
+}

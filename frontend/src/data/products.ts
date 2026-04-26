@@ -192,10 +192,10 @@ export const DID_YOU_KNOW_FACTS = [
 ];
 
 export const ONLINE_STORES = [
-  { name: 'Amazon India', types: 'All products', priceRange: '₹50–1500', url: 'https://www.amazon.in/s?k=menstrual+products', color: '#FF9900', minAge: 'under-15' },
-  { name: 'Nykaa', types: 'Pads, cups, organic', priceRange: '₹80–800', url: 'https://www.nykaa.com/feminine-hygiene/c/4788', color: '#FC2779', minAge: 'under-15' },
-  { name: 'Flipkart', types: 'All products', priceRange: '₹40–1200', url: 'https://www.flipkart.com/search?q=menstrual+products', color: '#2874F0', minAge: 'under-15' },
-  { name: 'Sirona', types: 'Cups, discs, organic', priceRange: '₹200–1000', url: 'https://www.sirona.in/', color: '#00BFA5', minAge: '18-22' },
-  { name: 'Carmesi', types: 'Organic pads, panty liners', priceRange: '₹150–500', url: 'https://mycarmesi.com/', color: '#E91E63', minAge: 'under-15' },
-  { name: 'Pee Safe', types: 'Pads, cups, intimate hygiene', priceRange: '₹100–800', url: 'https://www.peesafe.com/', color: '#7C4DFF', minAge: 'under-15' },
+  { name: 'Amazon India', types: 'All products', priceRange: '₹50–1500', url: 'https://www.amazon.in/s?k=sanitary+pads', color: '#FF9900', minAge: 'under-15' },
+  { name: 'Nykaa', types: 'Pads, cups, organic', priceRange: '₹80–800', url: 'https://www.nykaa.com/search/result/?q=period+products&root=search&searchType=Manual', color: '#FC2779', minAge: 'under-15' },
+  { name: 'Flipkart', types: 'All products', priceRange: '₹40–1200', url: 'https://www.flipkart.com/search?q=sanitary+pads&otracker=search', color: '#2874F0', minAge: 'under-15' },
+  { name: 'Sirona Hygiene', types: 'Cups, discs, organic', priceRange: '₹200–1000', url: 'https://www.thesirona.com/collections/period-care', color: '#00BFA5', minAge: '18-22' },
+  { name: 'Carmesi', types: 'Organic pads, panty liners', priceRange: '₹150–500', url: 'https://www.mycarmesi.com/collections/all', color: '#E91E63', minAge: 'under-15' },
+  { name: 'Pee Safe', types: 'Pads, cups, intimate hygiene', priceRange: '₹100–800', url: 'https://www.peesafe.com/collections/menstrual-hygiene', color: '#7C4DFF', minAge: 'under-15' },
 ];

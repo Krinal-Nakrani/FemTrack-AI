@@ -34,6 +34,7 @@ const UserNotifications = lazy(() => import('@/pages/UserNotifications'));
 const Passport = lazy(() => import('@/pages/Passport'));
 const PassportPublic = lazy(() => import('@/pages/PassportPublic'));
 const KnowYourOptions = lazy(() => import('@/pages/KnowYourOptions'));
+const PCODScan = lazy(() => import('@/pages/PCODScan'));
 
 import { seedDoctors } from '@/lib/seedDoctors';
 import { useUserType } from '@/hooks/useUserType';
@@ -110,6 +111,7 @@ function AppRoutes() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/pcod" element={<PCOD />} />
+          <Route path="/pcod-scan" element={<PCODScan />} />
           <Route path="/exercise" element={<Exercise />} />
           <Route path="/history" element={<History />} />
           <Route path="/profile" element={<Profile />} />

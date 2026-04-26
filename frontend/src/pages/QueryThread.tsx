@@ -40,6 +40,7 @@ interface AnswerData {
 
 export function QueryThread() {
   const { queryId } = useParams<{ queryId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { userType } = useUserType();
   const [queryData, setQueryData] = useState<QueryData | null>(null);

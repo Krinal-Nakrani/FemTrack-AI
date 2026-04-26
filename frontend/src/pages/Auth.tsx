@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Flower2, Mail, Lock, User, Eye, EyeOff, Chrome, ArrowLeft, Stethoscope, Heart } from 'lucide-react';
+import { Flower2, Mail, Lock, User, Eye, EyeOff, Chrome, ArrowLeft, Stethoscope, Heart, Calendar as CalendarIcon, Clock, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import femtrackDB from '@/lib/db';
 import { db } from '@/config/firebase';
@@ -24,6 +24,16 @@ export function Auth() {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  // Onboarding State
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [newUserId, setNewUserId] = useState<string | null>(null);
+  const [onboardingData, setOnboardingData] = useState({
+    lastPeriod: '',
+    prevPeriod: '',
+    avgCycle: 28,
+    avgPeriod: 5
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +103,16 @@ export function Auth() {
           setLoading(false);
           return;
         }
+        // If standard user signup, show onboarding
+        if (signupRole === 'user') {
+          const currentUser = (await import('@/config/firebase')).auth.currentUser;
+          if (currentUser) {
+            setNewUserId(currentUser.uid);
+            setShowOnboarding(true);
+            setLoading(false);
+            return;
+          }
+        }
       }
       
       navigate(isDoctor ? '/doctor' : '/dashboard', { replace: true });
@@ -113,15 +133,69 @@ export function Auth() {
     setLoading(true);
     try {
       await signInWithGoogle();
-      // Check role after Google Sign-in
-      const myProfile = await femtrackDB.profiles.where('email').equals(email).first();
-      if (myProfile?.role === 'partner') {
-        navigate('/partner-dashboard', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
+      const currentUser = (await import('@/config/firebase')).auth.currentUser;
+      if (currentUser) {
+        // Check if profile is new/not onboarded
+        const myProfile = await femtrackDB.profiles.where('odataId').equals(currentUser.uid).first();
+        if (myProfile?.role === 'partner') {
+          navigate('/partner-dashboard', { replace: true });
+        } else if (myProfile && !myProfile.onboarded && myProfile.role === 'user') {
+          setNewUserId(currentUser.uid);
+          setShowOnboarding(true);
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       }
     } catch (err: any) {
       setError(err.message?.replace('Firebase: ', '') || 'Google sign in failed');
+    }
+    setLoading(false);
+  };
+
+  const handleFinishOnboarding = async () => {
+    if (!newUserId) return;
+    setLoading(true);
+    try {
+      // 1. Create cycle records
+      if (onboardingData.lastPeriod) {
+        await femtrackDB.cycles.add({
+          cycleId: crypto.randomUUID(),
+          userId: newUserId,
+          startDate: onboardingData.lastPeriod,
+          endDate: null,
+          length: null,
+          periodLength: onboardingData.avgPeriod,
+          predictedNext: null,
+          synced: false
+        });
+      }
+
+      if (onboardingData.prevPeriod) {
+        await femtrackDB.cycles.add({
+          cycleId: crypto.randomUUID(),
+          userId: newUserId,
+          startDate: onboardingData.prevPeriod,
+          endDate: null,
+          length: null,
+          periodLength: onboardingData.avgPeriod,
+          predictedNext: null,
+          synced: false
+        });
+      }
+
+      // 2. Update profile
+      const profile = await femtrackDB.profiles.where('odataId').equals(newUserId).first();
+      if (profile) {
+        await femtrackDB.profiles.update(profile.id!, {
+          avgCycleLength: onboardingData.avgCycle,
+          avgPeriodLength: onboardingData.avgPeriod,
+          onboarded: true
+        });
+      }
+
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      console.error("Onboarding failed:", err);
     }
     setLoading(false);
   };
@@ -571,6 +645,122 @@ export function Auth() {
           </div>
         </motion.div>
       </div>
+
+      {/* Cycle Onboarding Modal */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-plum/90 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-lg glass-card p-8 relative overflow-hidden"
+            >
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl gradient-rose flex items-center justify-center text-white mb-6 shadow-glow-rose mx-auto">
+                  <CalendarIcon size={32} />
+                </div>
+                
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-display font-bold text-white mb-2">Let's Personalize Your Tracker</h2>
+                  <p className="text-sm text-lavender/60 font-body">Adding your last cycle helps us predict your next phase with better accuracy.</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
+                        Last Period Start
+                      </label>
+                      <div className="relative">
+                        <CalendarIcon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40" />
+                        <input
+                          type="date"
+                          value={onboardingData.lastPeriod}
+                          onChange={(e) => setOnboardingData({ ...onboardingData, lastPeriod: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3 rounded-xl bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
+                        Previous Start (Optional)
+                      </label>
+                      <div className="relative">
+                        <CalendarIcon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40" />
+                        <input
+                          type="date"
+                          value={onboardingData.prevPeriod}
+                          onChange={(e) => setOnboardingData({ ...onboardingData, prevPeriod: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3 rounded-xl bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
+                        Avg Cycle Length (days)
+                      </label>
+                      <div className="relative">
+                        <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40" />
+                        <input
+                          type="number"
+                          value={onboardingData.avgCycle}
+                          onChange={(e) => setOnboardingData({ ...onboardingData, avgCycle: parseInt(e.target.value) })}
+                          className="w-full pl-11 pr-4 py-3 rounded-xl bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-lavender/60 font-body mb-1.5 ml-1">
+                        Avg Period Length (days)
+                      </label>
+                      <div className="relative">
+                        <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-lavender/40" />
+                        <input
+                          type="number"
+                          value={onboardingData.avgPeriod}
+                          onChange={(e) => setOnboardingData({ ...onboardingData, avgPeriod: parseInt(e.target.value) })}
+                          className="w-full pl-11 pr-4 py-3 rounded-xl bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex flex-col gap-3">
+                    <button
+                      onClick={handleFinishOnboarding}
+                      disabled={loading}
+                      className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 group"
+                    >
+                      {loading ? 'Setting up...' : (
+                        <>
+                          Finish Setup <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => navigate('/dashboard', { replace: true })}
+                      className="w-full py-3 text-lavender/40 hover:text-lavender/60 transition-colors text-sm font-medium"
+                    >
+                      I'll do this later
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

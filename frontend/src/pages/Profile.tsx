@@ -18,6 +18,8 @@ export function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [height, setHeight] = useState('165');
   const [weight, setWeight] = useState('60');
+  const [isDirty, setIsDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
   
   // Invitation State (Partner only)
   const [invite, setInvite] = useState({ email: '', sent: false, code: '' });
@@ -33,6 +35,8 @@ export function Profile() {
       femtrackDB.profiles.where('odataId').equals(user.uid).first().then(async (p: UserProfile | undefined) => {
         if (p) {
           setProfile(p);
+          if (p.height) setHeight(p.height.toString());
+          if (p.weight) setWeight(p.weight.toString());
           setPermissions(p.partnerPermissions || 
             Object.fromEntries(Object.entries(PARTNER_PERMISSIONS).map(([k, v]) => [k, v.default]))
           );
@@ -59,6 +63,21 @@ export function Profile() {
       });
     }
   }, [user]);
+
+  const handleSaveHealth = async () => {
+    if (!profile || !profile.id) return;
+    setSaving(true);
+    try {
+      await femtrackDB.profiles.update(profile.id, {
+        height: parseFloat(height),
+        weight: parseFloat(weight)
+      });
+      setIsDirty(false);
+    } catch (err) {
+      console.error("Failed to save health data:", err);
+    }
+    setSaving(false);
+  };
 
   const handleSendInvite = async () => {
     if (!user || !profile || !invite.email.includes('@')) return;
@@ -118,10 +137,23 @@ export function Profile() {
 
       {/* Health Profile — BMI */}
       <GlassCard hover={false} padding="md">
-        <h3 className="text-sm font-display font-semibold text-white mb-4 flex items-center gap-2">
-          <Scale size={16} className="text-lavender" />
-          Health Profile
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-display font-semibold text-white flex items-center gap-2">
+            <Scale size={16} className="text-lavender" />
+            Health Profile
+          </h3>
+          {isDirty && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={handleSaveHealth}
+              disabled={saving}
+              className="px-3 py-1 rounded-lg bg-rose text-white text-[10px] font-bold uppercase tracking-wider shadow-glow-rose disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </motion.button>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-xs text-lavender/60 font-body mb-1.5">Height (cm)</label>
@@ -130,7 +162,10 @@ export function Profile() {
               <input
                 type="number"
                 value={height}
-                onChange={(e) => setHeight(e.target.value)}
+                onChange={(e) => {
+                  setHeight(e.target.value);
+                  setIsDirty(true);
+                }}
                 disabled={profile?.role === 'partner'}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-colors disabled:opacity-50"
               />
@@ -143,7 +178,10 @@ export function Profile() {
               <input
                 type="number"
                 value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                onChange={(e) => {
+                  setWeight(e.target.value);
+                  setIsDirty(true);
+                }}
                 disabled={profile?.role === 'partner'}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-plum-700/50 border border-lavender/10 text-white font-body text-sm focus:outline-none focus:border-rose/50 transition-colors disabled:opacity-50"
               />

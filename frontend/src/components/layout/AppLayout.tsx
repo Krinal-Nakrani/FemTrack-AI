@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
 import { FloatingActionButton } from '@/components/shared/FloatingActionButton';
+import { LunaChatbot } from '@/components/LunaChatbot';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -41,6 +42,9 @@ export function AppLayout() {
 
       {/* FAB — hidden on log page */}
       {location.pathname !== '/log' && <FloatingActionButton />}
+
+      {/* AI Assistant */}
+      <LunaChatbot />
     </div>
   );
 }

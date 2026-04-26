@@ -343,6 +343,34 @@
     transform: scale(0.95);
   }
 
+  /* ───────── Luna AI Trigger ───────── */
+  .luna-trigger {
+    @apply fixed z-50 flex items-center justify-center rounded-full shadow-glow-rose cursor-pointer transition-all duration-300;
+    background: linear-gradient(135deg, #1A0A2E, #4A1D7A);
+    border: 1px solid rgba(201, 75, 138, 0.3);
+    width: 56px;
+    height: 56px;
+    bottom: 162px;
+    right: 20px;
+  }
+
+  @media (min-width: 1024px) {
+    .luna-trigger {
+      bottom: 104px;
+      right: 32px;
+    }
+  }
+
+  .luna-trigger:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 0 30px rgba(201, 75, 138, 0.4);
+    border-color: rgba(201, 75, 138, 0.6);
+  }
+
+  .luna-trigger:active {
+    transform: scale(0.95);
+  }
+
   /* ───────── Bottom Navigation ───────── */
   .bottom-nav {
     @apply fixed bottom-0 left-0 right-0 z-40;

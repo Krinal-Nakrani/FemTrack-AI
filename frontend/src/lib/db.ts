@@ -37,6 +37,8 @@ export interface UserProfile {
   dob: string | null;
   avgCycleLength: number;
   avgPeriodLength: number;
+  height?: number;
+  weight?: number;
   inviteCode?: string;
   partnerPermissions?: Record<string, boolean>;
   role: 'user' | 'partner';
@@ -62,10 +64,10 @@ const femtrackDB = new Dexie('FemTrackAI') as Dexie & {
   predictions: EntityTable<PcodPrediction, 'id'>;
 };
 
-femtrackDB.version(3).stores({
+femtrackDB.version(4).stores({
   logs: '++id, date, userId, [userId+date], synced',
   cycles: '++id, cycleId, userId, startDate, synced',
-  profiles: '++id, odataId, inviteCode, linkedUserId, synced',
+  profiles: '++id, odataId, email, inviteCode, linkedUserId, synced',
   predictions: '++id, userId, date, synced',
 });
 

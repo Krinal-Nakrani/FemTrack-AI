@@ -92,12 +92,32 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const auth = sessionStorage.getItem('femtrack_admin_auth');
+    setIsAdmin(auth === 'true');
+  }, []);
+
+  if (isAdmin === null) return <div className="min-h-screen bg-plum flex items-center justify-center"><DashboardSkeleton /></div>;
+  if (!isAdmin) return <Navigate to="/admin/login" replace />;
+  return <>{children}</>;
+}
+
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+
 function AppRoutes() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-plum flex items-center justify-center p-8"><DashboardSkeleton /></div>}>
       <Routes>
         <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
         <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+
+        {/* Admin Portal */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
 
         {/* Public portals (no auth required) */}
         <Route path="/partner/:token" element={<PartnerPortal />} />

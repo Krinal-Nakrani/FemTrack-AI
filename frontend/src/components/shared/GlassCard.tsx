@@ -7,7 +7,7 @@ interface GlassCardProps extends HTMLMotionProps<'div'> {
   className?: string;
   glow?: 'rose' | 'lavender' | 'coral' | 'none';
   hover?: boolean;
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'sm' | 'md' | 'lg' | 'none';
 }
 
 export function GlassCard({
@@ -29,6 +29,7 @@ export function GlassCard({
     sm: 'p-4',
     md: 'p-6',
     lg: 'p-8',
+    none: '',
   };
 
   return (

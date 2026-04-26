@@ -5,7 +5,7 @@ import { Flower2, Mail, Lock, User, Eye, EyeOff, Chrome, ArrowLeft, Stethoscope,
 import { useAuth } from '@/contexts/AuthContext';
 import femtrackDB from '@/lib/db';
 import { db } from '@/config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export function Auth() {
   const [searchParams] = useSearchParams();
@@ -90,11 +90,23 @@ export function Auth() {
         // Update the newly created profile
         const myProfile = await femtrackDB.profiles.where('email').equals(email).first();
         if (myProfile) {
-          await femtrackDB.profiles.update(myProfile.id!, {
+          const profileUpdate = {
             role: signupRole,
             linkedUserId: linkedId,
             onboarded: signupRole === 'partner',
-            synced: false
+            synced: true, // Mark as synced
+            email: email,
+            name: name,
+            odataId: myProfile.odataId,
+            createdAt: new Date().toISOString()
+          };
+          
+          await femtrackDB.profiles.update(myProfile.id!, profileUpdate);
+          
+          // Sync to Global Firestore for Admin
+          await setDoc(doc(db, 'profiles', myProfile.odataId), {
+            ...profileUpdate,
+            id: myProfile.odataId
           });
         }
 
@@ -144,6 +156,19 @@ export function Auth() {
           setShowOnboarding(true);
         } else {
           navigate('/dashboard', { replace: true });
+        }
+
+        // Global Admin Sync for Google Users
+        if (myProfile) {
+          await setDoc(doc(db, 'profiles', currentUser.uid), {
+            id: currentUser.uid,
+            name: myProfile.name,
+            email: myProfile.email,
+            role: myProfile.role || 'user',
+            onboarded: myProfile.onboarded || false,
+            odataId: currentUser.uid,
+            createdAt: new Date().toISOString()
+          }, { merge: true });
         }
       }
     } catch (err: any) {

@@ -63,6 +63,10 @@ API docs at http://localhost:8000/docs
 | `VITE_FIREBASE_APP_ID` | App ID | Same as above |
 | `VITE_FIREBASE_VAPID_KEY` | Web Push VAPID key | Firebase Console → Cloud Messaging → Web Push Certificates |
 | `VITE_ENCRYPTION_KEY` | AES encryption key (64 hex chars) | Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `VITE_ADMIN_EMAIL_1` | Primary Admin Email | Define in your private `.env` |
+| `VITE_ADMIN_PASS_1` | Primary Admin Password | Define in your private `.env` |
+| `VITE_ADMIN_EMAIL_2` | Secondary Admin Email | Define in your private `.env` |
+| `VITE_ADMIN_PASS_2` | Secondary Admin Password | Define in your private `.env` |
 
 ### Backend (`backend/.env`)
 
@@ -106,20 +110,17 @@ API docs at http://localhost:8000/docs
 
 ## 📱 Features
 
-- 📅 **Smart Cycle Tracking** — Log flow, symptoms, mood, and lifestyle with AI predictions.
-- 🤝 **Partner Sharing** — Invite your partner with a secure code to view your dashboard.
-- ☁️ **Cloud Verification** — Secure, centralized invitation codes via Firebase Firestore.
-- 📱 **Unified Partner Dashboard** — A dedicated, single-page view for invited partners.
-- 🩺 **Doctor Portal** — Share data with gynecologists via a secure, verifiable link.
-- 🤖 **PCOD Risk Prediction** — ML-powered hormonal health assessment.
-- **Deep Insights** — 5 chart types: cycle length, symptoms, mood, flow, regularity
-- **Multi-step Logging** — 6-step form with animated transitions and confetti
-- **Offline First** — Full IndexedDB with auto-sync to Firestore
-- **PWA** — Installable, offline-capable, push notification ready
-- **PDF Reports** — Professional doctor-ready health reports
-- **Dark/Light Mode** — Beautiful glassmorphism design
-- **Encrypted Data** — AES-256 client-side encryption
-
+- 🛡️ **Central Command Admin Dashboard** — Full-access management portal to manage Users, Partners, and Medical Professionals with complete CRUD operations.
+- 📅 **Smart Cycle Tracking** — Log flow, symptoms, mood, and lifestyle with AI predictions and anomaly detection.
+- 🌸 **Personalized Onboarding** — New users can seed their dashboard with last cycle dates and average stats for immediate, accurate predictions.
+- 🤝 **Partner Sharing** — Invite your partner with a secure code to view your dashboard via a dedicated, single-page portal.
+- 🩺 **Doctor Ecosystem** — Verified gynecologists can access patient dashboards and answer queries within the community thread.
+- 🤖 **PCOD Risk Prediction** — ML-powered hormonal health assessment (Random Forest model).
+- 📊 **Deep Insights** — 5 interactive chart types: cycle length, symptoms, mood, flow, and regularity.
+- ☁️ **Hybrid Storage** — Offline-first IndexedDB with seamless cloud sync to Firebase Firestore.
+- 📱 **PWA Ready** — Installable, offline-capable, and optimized with a "More" drawer for mobile navigation.
+- 📄 **Professional Reports** — Export doctor-ready PDF health reports with one click.
+- 🔒 **Privacy First** — Client-side AES-256 encryption for sensitive health data.
 ---
 
 ## 🤖 ML Models

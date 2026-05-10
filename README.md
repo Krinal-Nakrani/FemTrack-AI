@@ -279,10 +279,4 @@ git pull origin main
 
 ---
 
-## 📄 License
-
-MIT © 2026 FemTrack AI
-
----
-
 > **Disclaimer:** FemTrack AI is not a medical device. The PCOD risk assessment provides estimates based on self-reported data and statistical models. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.
